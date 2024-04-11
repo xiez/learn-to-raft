@@ -1,4 +1,3 @@
-
 video: https://www.youtube.com/watch?v=YbZ3zDzDnrw
 
 ppt: https://www.slideserve.com/madge/raft-a-consensus-algorithm-for-replicated-logs
