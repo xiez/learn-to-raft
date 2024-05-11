@@ -6,6 +6,7 @@ import random
 import xmlrpc.server
 from multiprocessing import current_process
 from threading import Thread
+import queue
 
 from conf import logging
 from raft import ConsensusModule, STATE_L
@@ -24,12 +25,17 @@ class MyServer:
         time.sleep(seconds)
         return seconds
 
-    def request_vote(self, term, server_id):
-        return self.cm.request_vote(term, server_id)
+    def request_vote(self, term, server_id, last_log_index, last_log_term):
+        return self.cm.request_vote(term, server_id, last_log_index, last_log_term)
 
-    def append_entries(self, term, leader_id):
-        return self.cm.append_entries(term, leader_id)
-    
+    def append_entries(self, term, leader_id, prev_log_index,
+                       prev_log_term, entries, leader_commit_index):
+        return self.cm.append_entries(term, leader_id, prev_log_index,
+                                      prev_log_term, entries, leader_commit_index)
+
+    def submit(self, cmd):
+        return self.cm.submit(cmd)
+
 class Server:
     def __init__(self, server_id, host_port, peer_servers: List[Tuple[int, str]]):
         self.server_id = server_id
@@ -41,6 +47,8 @@ class Server:
         self.peer_servers = peer_servers
         self.peer_clients = {}  # peer_id -> ServerProxy
         self.cm = None
+
+        self.commit_log = queue.Queue() # a log contains all the commit entries
 
     def log(self, func, msg):
         func(f"pid: {current_process().pid} server#{self.server_id} {msg}")
